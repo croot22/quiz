@@ -10,7 +10,10 @@ import (
 	"time"
 )
 
-var numCorrect = 0
+type problem struct {
+	question string
+	answer string
+}
 
 func main() {
 	csvFilename := flag.String("csv", "problems.csv", "a csv file in the format of 'question,answer'")
@@ -37,38 +40,46 @@ func main() {
 	}
 
 	timer := time.NewTimer(time.Duration(*timeLimit) * time.Second)
-	startTimer(timer)
+	numCorrect := 0
 	for i, problem := range problems{
-		runQuiz(problem, i)
-	}
-
-}
-
-func runQuiz(problem problem, line int){
-	fmt.Printf("Problem #%d: %s = \n", line+1, problem.question)
-	submissionCh := make(chan string)
-	go func() {
-		var submission string
-		_, err := fmt.Scanf("%s\n", &submission)
-		if err != nil {
-			exit("Failed to scan submitted answer")
-		}
-		submissionCh <- submission
-	}()
-	select {
-	case <-timer.C:
-		fmt.Printf("\nYou scored %d out of %d.\n", numCorrect, len(problems))
-		return
-	case submission := <-submissionCh:
-		if submission == problem.answer {
-			numCorrect++
+		giveQuestion(problem, i+1)
+		submissionCh := make(chan string)
+		go func() {
+			submission := getSubmission()
+			submissionCh <- submission
+		}()
+		select {
+		case <-timer.C:
+			giveFinalGrade(numCorrect, len(problems))
+			return
+		case submission := <-submissionCh:
+			gradeSubmission(submission, problem.answer, &numCorrect)
 		}
 	}
-	fmt.Printf("You scored %d out of %d.\n", numCorrect, len(problems))
+	giveFinalGrade(numCorrect, len(problems))
 }
 
-func startTimer(timer *time.Timer){
+func giveQuestion(problem problem, line int){
+	fmt.Printf("Problem #%d: %s = \n", line, problem.question)
+}
 
+func getSubmission() string{
+	var submission string
+	_, err := fmt.Scanf("%s\n", &submission)
+	if err != nil {
+		exit("Failed to scan submitted answer")
+	}
+	return submission
+}
+
+func gradeSubmission(submission, answer string, numCorrect *int){
+	if submission == answer {
+		*numCorrect++
+	}
+}
+
+func giveFinalGrade(numCorrect, numProblems int){
+	fmt.Printf("You scored %d out of %d.\n", numCorrect, numProblems)
 }
 
 func parseLines(lines [][]string) []problem {
@@ -85,11 +96,6 @@ func parseLines(lines [][]string) []problem {
 func shuffleQuiz(problems []problem){
 	rand.Seed(time.Now().UnixNano())
 	rand.Shuffle(len(problems), func(i, j int) {problems[i], problems[j] = problems[j], problems[i]})
-}
-
-type problem struct {
-	question string
-	answer string
 }
 
 func exit(msg string) {

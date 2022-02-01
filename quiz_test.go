@@ -1,8 +1,8 @@
 package quiz
 
 import (
-	"testing"
 	"reflect"
+	"testing"
 )
 
 var prob1 = problem{
@@ -31,6 +31,6 @@ func TestShuffle(t *testing.T){
 	}
 }
 
-func TestRunQuiz(t *testing.T) {
-
+func TestGetSubmission(t *testing.T) {
+	getSubmission()
 }
