@@ -61,7 +61,7 @@ func parseLines(lines [][]string) []problem {
 	for i, line := range lines {
 		ret[i] = problem{
 			question: line[0],
-			answer: strings.TrimSpace(line[1]),
+			answer: strings.TrimSpace(strings.ToLower(line[1])),
 		}
 	}
 	return ret
