@@ -32,8 +32,6 @@ func main() {
 	timer := time.NewTimer(time.Duration(*timeLimit) * time.Second)
 
 	runQuiz(problems, timer)
-
-	fmt.Printf("You scored %d out of %d.\n", numCorrect, len(problems))
 }
 
 func runQuiz(problems []problem, timer *time.Timer){
@@ -55,6 +53,7 @@ func runQuiz(problems []problem, timer *time.Timer){
 			}
 		}
 	}
+	fmt.Printf("You scored %d out of %d.\n", numCorrect, len(problems))
 }
 
 func parseLines(lines [][]string) []problem {
