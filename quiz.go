@@ -1,4 +1,4 @@
-package main
+package quiz
 
 import (
 	"encoding/csv"
@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-var numCorrect int = 0
+var numCorrect = 0
 
 func main() {
 	csvFilename := flag.String("csv", "problems.csv", "a csv file in the format of 'question,answer'")
@@ -37,30 +37,38 @@ func main() {
 	}
 
 	timer := time.NewTimer(time.Duration(*timeLimit) * time.Second)
+	startTimer(timer)
+	for i, problem := range problems{
+		runQuiz(problem, i)
+	}
 
-	runQuiz(problems, timer)
 }
 
-func runQuiz(problems []problem, timer *time.Timer){
-	for i, problem:= range problems{
-		fmt.Printf("Problem #%d: %s = \n", i+1, problem.question)
-		submissionCh := make(chan string)
-		go func() {
-			var submission string
-			fmt.Scanf("%s\n", &submission)
-			submissionCh <- submission
-		}()
-		select {
-		case <-timer.C:
-			fmt.Printf("\nYou scored %d out of %d.\n", numCorrect, len(problems))
-			return
-		case submission := <-submissionCh:
-			if submission == problem.answer {
-				numCorrect++
-			}
+func runQuiz(problem problem, line int){
+	fmt.Printf("Problem #%d: %s = \n", line+1, problem.question)
+	submissionCh := make(chan string)
+	go func() {
+		var submission string
+		_, err := fmt.Scanf("%s\n", &submission)
+		if err != nil {
+			exit("Failed to scan submitted answer")
+		}
+		submissionCh <- submission
+	}()
+	select {
+	case <-timer.C:
+		fmt.Printf("\nYou scored %d out of %d.\n", numCorrect, len(problems))
+		return
+	case submission := <-submissionCh:
+		if submission == problem.answer {
+			numCorrect++
 		}
 	}
 	fmt.Printf("You scored %d out of %d.\n", numCorrect, len(problems))
+}
+
+func startTimer(timer *time.Timer){
+
 }
 
 func parseLines(lines [][]string) []problem {
